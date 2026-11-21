@@ -1,0 +1,114 @@
+# ----------------------------------------------------------------------------
+# 智能小说阅读与创作平台 —— 后端主配置
+# 说明：
+#   1. 数据库使用独立库 smart_novel_pro（与原开源项目 novel 库彻底隔离）
+#   2. 智谱 AI Key 一律通过系统环境变量 AI_API_KEY 注入，严禁写入明文
+#   3. 本文件不含任何真实密钥
+# ----------------------------------------------------------------------------
+
+spring:
+  application:
+    name: smart-novel-platform
+
+  # JSON 序列化：Number 类型统一转为 String，避免前端 JS 长整型精度丢失
+  jackson:
+    generator:
+      write-numbers-as-strings: true
+
+  servlet:
+    multipart:
+      max-file-size: 5MB
+      max-request-size: 20MB
+
+  # 启用虚拟线程（Spring Boot 3.4 / Java 21）
+  threads:
+    virtual:
+      enabled: true
+  main:
+    keep-alive: true
+
+  # ---------------- 数据源：MySQL smart_novel_pro ----------------
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://localhost:3306/smart_novel_pro?useUnicode=true&characterEncoding=utf-8&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
+    username: root
+    password: ${MYSQL_PASSWORD:}
+
+  # ---------------- Redis（本地开发，默认无密码） ----------------
+  data:
+    redis:
+      host: 127.0.0.1
+      port: 6379
+      password: ${REDIS_PASSWORD:}
+
+  # ---------------- Spring AI：智谱（OpenAI 兼容协议） ----------------
+  ai:
+    openai:
+      # 请通过系统环境变量 AI_API_KEY 注入，源码/配置中严禁出现明文
+      api-key: ${AI_API_KEY:}
+      # 智谱开放平台
+      base-url: https://open.bigmodel.cn/api/paas/v4
+      chat:
+        # 智谱对话路径不带 /v1（Spring AI 默认会拼成 /v1/chat/completions）
+        completions-path: /chat/completions
+        options:
+          model: glm-4-flash
+      embedding:
+        # 智谱向量路径不带 /v1（Spring AI 默认会拼成 /v1/embeddings）
+        embeddings-path: /embeddings
+        options:
+          model: embedding-3
+
+# ---------------- MyBatis-Plus ----------------
+mybatis-plus:
+  configuration:
+    map-underscore-to-camel-case: true
+  global-config:
+    banner: false
+    db-config:
+      id-type: auto
+  mapper-locations: classpath*:mapper/**/*.xml
+
+# ---------------- 服务端口 ----------------
+server:
+  port: 8888
+
+# ---------------- 监控端点（用于启动验证） ----------------
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: always
+
+# ---------------- 平台自定义配置 ----------------
+smart-novel:
+  # 跨域允许来源（前端开发服务器地址）
+  cors:
+    allow-origins:
+      - http://localhost:5173
+      - http://localhost:3000
+  # JWT 密钥（生产环境务必通过环境变量 JWT_SECRET 覆盖）
+  jwt:
+    # 公开仓库请通过环境变量 JWT_SECRET 配置；此处仅保留足够长度的占位值
+    secret: ${JWT_SECRET:please-change-this-jwt-secret-32bytes!}
+    # 令牌有效期（毫秒），默认 24 小时
+    expire-ms: 86400000
+  # 文件上传路径（封面等，可选）
+  file:
+    upload:
+      path: ${SMART_NOVEL_UPLOAD_PATH:./upload}
+  # Spring AI RAG 知识库配置
+  ai:
+    rag:
+      # 向量库（SimpleVectorStore）持久化文件
+      vector-store-path: ${SMART_NOVEL_VECTOR_STORE:./ai-data/vector-store.json}
+      embedding-model: embedding-3
+      chunk-size: 500
+      chunk-overlap: 100
+      top-k: 5
+      similarity-threshold: 0.3
+      context-max-chars: 3000
+      max-chapters-per-index: 200

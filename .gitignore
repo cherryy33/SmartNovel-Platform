@@ -1,0 +1,41 @@
+# ---- IDE ----
+.idea/
+.vscode/
+*.iml
+*.ipr
+*.iws
+
+# ---- OS ----
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ---- Java / Maven ----
+target/
+*.class
+.mvn/wrapper/maven-wrapper.jar.bak
+
+# ---- Node / 前端 ----
+node_modules/
+dist/
+*.local
+
+# ---- 日志 ----
+logs/
+*.log
+
+# ---- 运行时产物（AI 向量库、上传文件等，不入库） ----
+ai-data/
+upload/
+
+# ---- 本地 AI 助手/编辑器配置与临时文件（不入库） ----
+.claude/
+.aiignore
+.cursor/
+docs_tmp_*.json
+*.tmp
+
+# ---- 数据库备份：完整 SQL 超过 100MB 不入库，提交压缩版 ----
+database/novel_init.sql
+database/*.sql
+!database/novel_init.sql.gz
